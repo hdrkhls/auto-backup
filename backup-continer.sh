@@ -1,35 +1,26 @@
 #!/bin/bash
 
-# export DB_HOST="localhost"
-# export DB_USER="postgres"
-# export DB_PASSWD="openpass"
-# export DB_NAME="openfire"
-export DB_CONTAINER="Your_Name_Container"
-export LOCAL_SMB_DIR="Your_DST_PATH"
-export REMOTE_SMB_DIR="YOUR_DST_SMB"  #example export REMOTE_SMB_DIR="//1.1.1.1/your-shared-folder"
+export DB_CONTAINER="snipe-it" # name your container
+export LOCAL_SMB_DIR="/mnt/backup-snipeit"
+export REMOTE_SMB_DIR="your path folder for dst bckp" #exmp "//1.1.1.1/backup"
+export NAME="snipe-it" #for calling format name backup
+export DATE_CP="`date +%Y-%m-%d-%H-%M-%S -d "today"`" #calling copy file by date
+export DATE_RM="`date +%Y-%m-%d-%H-%M-%S -d "2 day ago"`" #delete copying file 2 day ago
+export BACKUP_DIR="/var/www/html/storage/app/backups/" #path folder backup snipeit
 
-export DATE_BACKUP="`date +%Y-%m-%d_%H-%M-%S`"
-export DATE_LW="`date +%Y-%m-%d_%H-%M-%S -d "last week"`"
-export BACKUP_DIR="/var/www/html/storage/app/backups/$DATE_BACKUP"
-
-mkdir -p $LOCAL_SMB_DIR
-mkdir -p $BACKUP_DIR
+mkdir -p $LOCAL_SMB_DIR #create folder if doesn't exist
 
 # should not include -ti, cron doesn't attach to any TTYs.
-/bin/echo "Creating database backup for ${your-name-container-to-backup} ..."
+/bin/echo "Creating database backup for ${snipe-it} ..."
 docker exec "$DB_CONTAINER" /usr/bin/php /var/www/html/artisan snipeit:backup && echo "Dump completed"
 
-
 # mount smb dir
-/usr/sbin/mount.cifs $REMOTE_SMB_DIR $LOCAL_SMB_DIR -o user=user-smb,pass=passwd-smb && echo "SMB mounted"
+/usr/sbin/mount.cifs $REMOTE_SMB_DIR $LOCAL_SMB_DIR -o user=user_smb,pass=password_smb && echo "SMB mounted"
 
+docker cp snipelpc:/var/www/html/storage/app/backups/$NAME-$DATE_CP.zip $LOCAL_SMB_DIR/ && echo "Backup copied"
 
-# copy backup into remote mounted smb
-docker cp name-container:/var/www/html/storage/app/backups/ $LOCAL_SMB_DIR/ && echo "Backup copied"
+rm -f $BACKUP_DIR/$NAME-$DATE_RM.zip $LOCAL_SMB_DIR/$NAME-$DATE_RM.zip
 
-
-# remove old (1 week) backup)
-#rm -f $BACKUP_DIR/$DB_NAME_$DATE_LW.7z $LOCAL_SMB_DIR/$DB_NAME_$DATE_LW.7z
-
-# unmount the smb
 umount $LOCAL_SMB_DIR && echo "SMB unmounted" && echo "Completed"
+
+exit
