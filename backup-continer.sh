@@ -19,7 +19,9 @@ docker exec "$DB_CONTAINER" /usr/bin/php /var/www/html/artisan snipeit:backup &&
 
 docker cp snipelpc:/var/www/html/storage/app/backups/$NAME-$DATE_CP.zip $LOCAL_SMB_DIR/ && echo "Backup copied"
 
-rm -f $BACKUP_DIR/$NAME-$DATE_RM.zip $LOCAL_SMB_DIR/$NAME-$DATE_RM.zip
+rm -f $LOCAL_SMB_DIR/$NAME-$DATE_RM.zip
+
+docker rm -f snipelpc:/var/www/html/storage/app/backups/$NAME-$DATE_RM.zip && echo "File Removed from Container"
 
 umount $LOCAL_SMB_DIR && echo "SMB unmounted" && echo "Completed"
 
